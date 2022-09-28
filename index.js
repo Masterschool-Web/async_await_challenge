@@ -80,17 +80,63 @@ const createAvatar = (user) => {
 
 const getLoginUser = async () => {
   const id = getUserId();
+  const response = await fetch(`${DATABASE_URL}/users/${id}`);
+  const user = await response.json();
 
-  // FETCH USER DATA
+  // const user = users.find((user) => user.id === id); // FINE
 
   createAvatar(user);
 };
 
-const getUserPosts = async (id) => {
+const getUserPosts = async (userId) => {
   // FETCH POSTS DATA
+  const postResponse = await fetch(`${DATABASE_URL}/posts`);
+  const posts = await postResponse.json();
+
+  // const userPosts = posts.filter((post) => post.userId === userId);
 
   // FETCH COMMENTS RELATED TO POSTS
 
+  // const commentResponse = await fetch(`${DATABASE_URL}/comments`);
+  // const comments = await commentResponse.json();
+
+  const userPosts = await Promise.all(
+    posts
+      .filter((post) => post.userId === userId)
+      .map(async (post) => {
+        // find the relevant comments for each post
+        // const postComments = comments.filter(
+        //   (comment) => comment.postId === post.id
+        // );
+
+        const response = await fetch(
+          `${DATABASE_URL}/comments?postId=${post.id}`
+        );
+        const comments = await response.json();
+
+        // console.log(comments);
+
+        return {
+          ...post,
+          comments,
+          // comments: postComments,
+        };
+      })
+  );
+
+  // const userPostsWithComments = userPosts.map((post) => {
+  //   // find the relevant comments for each post
+  //   const postComments = comments.filter(
+  //     (comment) => comment.postId === post.id
+  //   );
+
+  //   return {
+  //     ...post,
+  //     comments: postComments,
+  //   };
+  // });
+
+  // const postsCards = userPostsWithComments.map((post) => {
   const postsCards = userPosts.map((post) => {
     return createPostCard(post);
   });
@@ -104,3 +150,41 @@ const getUserPosts = async (id) => {
 
 getLoginUser();
 getUserPosts(getUserId());
+
+// const todosContainer = document.getElementById("todos");
+
+// const createTodo = (todo) => {
+//   const todoEl = document.createElement("div");
+
+//   const todoTitle = document.createElement("p");
+//   const todoTitleText = document.createTextNode(todo.title);
+//   todoTitle.appendChild(todoTitleText);
+
+//   const todoCompleted = document.createElement("p");
+//   const todoCompletedText = document.createTextNode(todo.completed);
+//   todoCompleted.appendChild(todoCompletedText);
+
+//   todoEl.appendChild(todoTitle);
+//   todoEl.appendChild(todoCompleted);
+
+//   todosContainer.appendChild(todoEl);
+// };
+
+// const getTodos = async () => {
+//   const response = await fetch(`${DATABASE_URL}/todos`);
+//   const todos = await response.json(); // goes into the body of the response (where the data is)
+
+//   console.log(todos);
+
+//   todos.forEach((todo) => {
+//     /*
+//       {
+//         title: "...",
+//         completed: true / false
+//       }
+//     */
+//     createTodo(todo);
+//   });
+// };
+
+// // getTodos();
